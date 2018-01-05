@@ -1,2 +1,6 @@
 <resources>
+
+    <!-- hint 提示语-->
+    <string name="hint_no_find_data">not find data!</string>
+
 </resources>

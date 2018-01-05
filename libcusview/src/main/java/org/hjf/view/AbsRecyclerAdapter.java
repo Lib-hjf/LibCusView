@@ -1,4 +1,4 @@
-package org.hjf.cusviewx;
+package org.hjf.view;
 
 import android.content.Context;
 import android.support.annotation.IdRes;

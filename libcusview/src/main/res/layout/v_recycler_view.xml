@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false" />
+
+    <!-- clipToPadding，默认true -->
+    <!-- 设置为 false 时，View 滑动的时候忽略这个内边距 -->
+    <!-- 例如：RecyclerView 设置了 paddingTop，当 clipToPadding = false ，上滑时会忽略 paddingTop 的设置间距 -->
+
+    <include layout="@layout/v_empty_view" />
+</FrameLayout>

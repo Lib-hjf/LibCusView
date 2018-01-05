@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- 状态栏高度 -->
+    <dimen name="window_status_height">0dp</dimen>
+
+    <!-- TextSize -->
+    <dimen name="text_title_big">20sp</dimen>
+    <dimen name="text_title_small">18sp</dimen>
+    <dimen name="text_main_big">16sp</dimen>
+    <dimen name="text_main_small">14sp</dimen>
+    <dimen name="text_hint_big">12sp</dimen>
+    <dimen name="text_hint_small">10sp</dimen>
+
+</resources>
