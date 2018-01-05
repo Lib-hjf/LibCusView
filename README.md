@@ -13,6 +13,6 @@ allprojects {
 
 ```
 dependencies {
-    compile 'com.github.Lib-hjf:LibUtil:1.1.0'
+    compile 'com.github.Lib-hjf:LibCusView:0.2.0'
 }
 ```
