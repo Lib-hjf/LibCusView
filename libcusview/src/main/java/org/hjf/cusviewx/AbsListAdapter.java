@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import org.hjf.utilx.ParamUtils;
+import org.hjf.util.ParamUtils;
 
 import java.util.ArrayList;
 import java.util.List;
