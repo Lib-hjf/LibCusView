@@ -22,9 +22,9 @@ import org.hjf.view.R;
 /**
  * Created by hjf on 2017/1/22.
  * Activity 基类
- *
+ * <p>
  * 解决办法
- *  - 横竖屏切换：{@link #onConfigurationChanged(Configuration)}
+ * - 横竖屏切换：{@link #onConfigurationChanged(Configuration)}
  */
 public class BaseActivity extends AppCompatActivity {
 
@@ -63,8 +63,8 @@ public class BaseActivity extends AppCompatActivity {
     @SuppressLint("InflateParams")
     protected void iniFrameLayoutView() {
         this.mBaseLayoutView = LayoutInflater.from(this).inflate(R.layout.a_base, null);
-        this.mAppBarParentLayout = (AppBarLayout) mBaseLayoutView.findViewById(R.id.abl_base_activity_title);
-        this.mContentParentLayout = (FrameLayout) mBaseLayoutView.findViewById(R.id.fl_base_activity_content);
+        this.mAppBarParentLayout = mBaseLayoutView.findViewById(R.id.abl_base_activity_title);
+        this.mContentParentLayout = mBaseLayoutView.findViewById(R.id.fl_base_activity_content);
     }
 
 
@@ -81,12 +81,12 @@ public class BaseActivity extends AppCompatActivity {
 
     /**
      * Activity 横竖屏切换
-     *
+     * <p>
      * XML 配置 android:configChanges 属性
-     *  - 不配置：竖->横【生命周期】X1、横->竖【生命周期】X2
-     *  - orientation：竖->横、横->竖【生命周期】X1
-     *  - "orientation|keyboardHidden|screenSize"：竖->横、横->竖【onConfigurationChanged() X1】
-     *
+     * - 不配置：竖->横【生命周期】X1、横->竖【生命周期】X2
+     * - orientation：竖->横、横->竖【生命周期】X1
+     * - "orientation|keyboardHidden|screenSize"：竖->横、横->竖【onConfigurationChanged() X1】
+     * <p>
      * 建议配置第三个，不会重走 Activity 生命周期，而会调起此方法。
      * 可以：{@link #setContentView(int)} --> {@link #onContentChanged()} 重新设置整个布局文件
      * 可以：hide、show 事先准备好的视图
@@ -169,7 +169,7 @@ public class BaseActivity extends AppCompatActivity {
      * 初始化 ViewStub 并获取 ProgressView 控件
      */
     private void initProgressView() {
-        ViewStub mProgressViewStub = (ViewStub) findViewById(R.id.vs_progress);
+        ViewStub mProgressViewStub = findViewById(R.id.vs_progress);
         mProgressViewStub.inflate();
         this.mProgressLayoutView = findViewById(R.id.fl_progress);
 
