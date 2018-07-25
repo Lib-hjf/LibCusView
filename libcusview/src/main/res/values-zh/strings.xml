@@ -3,4 +3,5 @@
     <!-- hint 提示语-->
     <string name="hint_no_find_data">没有找到相关数据!</string>
 
+    <string name="swipe_layout_menu_delete">删除</string>
 </resources>

@@ -1,4 +1,4 @@
-package org.hjf.view;
+package org.hjf.view.listview;
 
 import android.content.Context;
 import android.support.annotation.NonNull;

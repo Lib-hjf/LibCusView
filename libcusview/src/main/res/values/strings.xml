@@ -3,4 +3,6 @@
     <!-- hint 提示语-->
     <string name="hint_no_find_data">not find data!</string>
 
+    <string name="swipe_layout_menu_delete">delete</string>
+
 </resources>

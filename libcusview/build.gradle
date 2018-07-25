@@ -19,5 +19,5 @@ dependencies {
     implementation 'com.android.support:design:26.1.0'
 
     api project(':out-lib-logx:liblogx') // 本地开发
-//    api 'com.github.Lib-hjf:LibLogX:0.1.1' // 上传 github
+//    api 'com.github.Lib-hjf:LibLogX:0.2.0' // 上传 github
 }

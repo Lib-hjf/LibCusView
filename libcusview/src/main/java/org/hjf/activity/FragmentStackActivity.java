@@ -20,6 +20,7 @@ public abstract class FragmentStackActivity extends BaseActivity {
     @IdRes
     public abstract int getFragmentContentId();
 
+
     /**
      * 增加Fragment显示，只支持一个 FrameLayout 置换时有回退效果
      * 因为 Fragment 在回退栈时执行 onDestroyView 销毁View，需要保存状态
@@ -45,24 +46,22 @@ public abstract class FragmentStackActivity extends BaseActivity {
     /**
      * 移除Fragment
      */
-    public void removeFragment() {
+    public boolean removeFragment() {
         if (getSupportFragmentManager().getBackStackEntryCount() > 1) {
             getSupportFragmentManager().popBackStack();
-        } else {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 捕获返回按键事件
+     */
+    @Override
+    public void onBackPressed() {
+        if (!removeFragment()){
             finish();
         }
     }
 
-    /**
-     * 捕获返回按键时间
-     * onKeyDown 调用时间快于 onBackPressed
-     */
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (KeyEvent.KEYCODE_BACK == keyCode) {
-            removeFragment();
-            return true;
-        }
-        return super.onKeyDown(keyCode, event);
-    }
 }
