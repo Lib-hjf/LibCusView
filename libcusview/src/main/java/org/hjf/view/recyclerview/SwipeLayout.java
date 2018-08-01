@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 
-import org.hjf.liblogx.LogUtil;
+import org.hjf.util.log.LogUtil;
 
 
 /**
