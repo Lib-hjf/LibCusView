@@ -8,6 +8,7 @@ import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.AppBarLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -48,6 +49,11 @@ public class BaseActivity extends AppCompatActivity {
      * 默认：不响应用户操作
      */
     private boolean isActionableWhenMaskIsShowing = true;
+    /**
+     * 权限申请结果回调
+     */
+    private ActivityCompat.OnRequestPermissionsResultCallback permissionsResultCallback;
+    private int permissionsRequestCode;
 
 
     @Override
@@ -143,6 +149,29 @@ public class BaseActivity extends AppCompatActivity {
         this.mContentParentLayout.removeAllViews();
         this.mContentParentLayout.addView(view, params);
         super.setContentView(this.mBaseLayoutView);
+    }
+
+    /**
+     * 接管自身的 {@link this#onRequestPermissionsResult(int, String[], int[])} 方法动作逻辑
+     *
+     * @param requestCode               请求码
+     * @param permissionsResultCallback 授权结果回调对象
+     */
+    public void setPermissionsResultCallback(int requestCode, ActivityCompat.OnRequestPermissionsResultCallback permissionsResultCallback) {
+        this.permissionsRequestCode = requestCode;
+        this.permissionsResultCallback = permissionsResultCallback;
+    }
+
+    /**
+     * 权限申请结果回调
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (permissionsResultCallback != null && this.permissionsRequestCode == requestCode) {
+            permissionsResultCallback.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
     }
 
     /**

@@ -3,7 +3,7 @@ package org.hjf.activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 
-import org.hjf.util.log.LogUtil;
+import org.hjf.log.LogUtil;
 
 
 /**
