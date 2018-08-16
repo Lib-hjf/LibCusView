@@ -4,7 +4,10 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +19,8 @@ public abstract class AbsRecyclerAdapter<T> extends RecyclerView.Adapter<ViewHol
 
     protected Context mContextInAdapter;
     private ArrayList<T> mData;
+    private OnItemClickListener onItemClickListener;
+    private OnItemLongClickListener onItemLongClickListener;
 
     public AbsRecyclerAdapter(Context context) {
         this.mContextInAdapter = context;
@@ -23,8 +28,30 @@ public abstract class AbsRecyclerAdapter<T> extends RecyclerView.Adapter<ViewHol
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int position) {
-        return getViewHolderBuild(position).build(mContextInAdapter, parent);
+    public ViewHolder onCreateViewHolder(ViewGroup parent, final int position) {
+        ViewHolder viewHolder = getViewHolderBuild(position).build(mContextInAdapter, parent);
+        if (this.onItemClickListener != null) {
+            viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (AbsRecyclerAdapter.this.onItemClickListener != null) {
+                        onItemClickListener.onItemClickListener(position);
+                    }
+                }
+            });
+        }
+        if (onItemLongClickListener != null) {
+            viewHolder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    if (AbsRecyclerAdapter.this.onItemLongClickListener != null) {
+                        return onItemLongClickListener.onItemLongClickListener(position);
+                    }
+                    return false;
+                }
+            });
+        }
+        return viewHolder;
     }
 
 
@@ -91,5 +118,14 @@ public abstract class AbsRecyclerAdapter<T> extends RecyclerView.Adapter<ViewHol
     public void removeData(T data) {
         int position = this.mData.indexOf(data);
         this.removeData(position);
+    }
+
+
+    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
+        this.onItemClickListener = onItemClickListener;
+    }
+
+    public void setOnItemLongClickListener(OnItemLongClickListener onItemLongClickListener) {
+        this.onItemLongClickListener = onItemLongClickListener;
     }
 }
