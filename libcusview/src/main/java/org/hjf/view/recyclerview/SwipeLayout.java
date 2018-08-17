@@ -2,13 +2,20 @@ package org.hjf.view.recyclerview;
 
 import android.content.Context;
 import android.graphics.Rect;
+import android.support.annotation.IntDef;
+import android.support.annotation.NonNull;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 
 import org.hjf.log.LogUtil;
+import org.hjf.view.R;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 
 /**
@@ -16,6 +23,8 @@ import org.hjf.log.LogUtil;
  * https://blog.csdn.net/chunqiuwei/article/details/50722061
  */
 public class SwipeLayout extends ViewGroup {
+
+    public static final int DEFAULT_SWIPE_MENU_LAYOUT_DEL = R.layout.item_swipe_menu_delete;
 
     /**
      * 横向滑动距离 / 竖向滑动距离  最小比例
@@ -29,8 +38,8 @@ public class SwipeLayout extends ViewGroup {
      * 刷新UI最小移动距离，没到这个距离不刷新UI
      */
     private int mTouchSlop;
-    @ViewHolder.SwipeModel
-    private int mSwipeModel = ViewHolder.SwipeModel.NONE;
+    @SwipeModel
+    private int mSwipeModel = SwipeModel.NONE;
     private Rect mRectContent = new Rect();
     private Rect mRectMenu = new Rect();
     private View mContentView, mMenuView;
@@ -83,28 +92,31 @@ public class SwipeLayout extends ViewGroup {
 //        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
 //        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
 
+
         // 各组件尺寸设置策略
-        // 设置 ContentView 的宽度
+        //  ContentView 设置
         final LayoutParams lpContent = mContentView.getLayoutParams();
         lpContent.width = groupViewWidth;
-        // 设置 MenuWidth 的高度
-        final LayoutParams lpMenu = mMenuView.getLayoutParams();
-        if (lpMenu.height == LayoutParams.WRAP_CONTENT || lpMenu.height == LayoutParams.MATCH_PARENT) {
-            lpMenu.height = lpContent.height;
-            mMenuView.setLayoutParams(lpMenu);
+        measureChild(mContentView, widthMeasureSpec, heightMeasureSpec);
+
+        //  MenuWidth 设置
+        if (mSwipeModel != SwipeModel.NONE) {
+            final LayoutParams lpMenu = mMenuView.getLayoutParams();
+            if (lpMenu.height == LayoutParams.WRAP_CONTENT || lpMenu.height == LayoutParams.MATCH_PARENT) {
+                lpMenu.height = lpContent.height;
+                mMenuView.setLayoutParams(lpMenu);
+            }
+            measureChild(mMenuView, widthMeasureSpec, heightMeasureSpec);
         }
+
         // 设置 SwipeLayout 的高度
         groupViewHeight = Math.max(lpContent.height, groupViewHeight);
-//        LogUtil.d("Swipe Layout  Width{0} Height{1}", groupViewWidth, groupViewHeight);
-
-        // 测量两个子View
-        measureChild(mContentView, widthMeasureSpec, heightMeasureSpec);
-        measureChild(mMenuView, widthMeasureSpec, heightMeasureSpec);
-
+        LogUtil.d("Swipe Layout  Width{0} Height{1}", groupViewWidth, groupViewHeight);
         //这里将宽度和高度与Google为我们设定的建议最低宽高对比，确保我们要求的尺寸不低于建议的最低宽高。
         groupViewWidth = Math.max(groupViewWidth, getSuggestedMinimumWidth());
         groupViewHeight = Math.max(groupViewHeight, getSuggestedMinimumHeight());
 
+        // 请求宽高
         setMeasuredDimension(resolveSizeAndState(groupViewWidth, widthMeasureSpec, 0),
                 resolveSizeAndState(groupViewHeight, heightMeasureSpec, 0));
     }
@@ -125,29 +137,33 @@ public class SwipeLayout extends ViewGroup {
 
         // 2.1 确立 MenuView 的显示区域
         // 2.2 给位移取值范围赋值
-        if (mMenuView.getMeasuredWidth() == 0){
-            throw new RuntimeException("MenuView width is 0, Should set a specific value.");
+        if (mSwipeModel != SwipeModel.NONE) {
+            if (mMenuView.getMeasuredWidth() == 0) {
+                throw new RuntimeException("MenuView width is 0, Should set a specific value.");
+            }
+            if (mSwipeModel == SwipeModel.RIGHT) {
+                mRectMenu.left = mRectContent.right;
+                mScrollRange[0] = 0;
+                mScrollRange[1] = mMenuView.getMeasuredWidth();
+            } else if (mSwipeModel == SwipeModel.LEFT) {
+                mRectMenu.left = mRectContent.left - mMenuView.getMeasuredWidth();
+                mScrollRange[0] = mMenuView.getMeasuredWidth() * -1;
+                mScrollRange[1] = 0;
+            }
+            mRectMenu.right = mRectMenu.left + mMenuView.getMeasuredWidth();
+            mRectMenu.top = mRectContent.top;
+            mRectMenu.bottom = mRectMenu.top + mMenuView.getMeasuredHeight();
+            LogUtil.d("Rect MenuView  -> [left{0},top{1},right{2},bottom{3}]",
+                    mRectMenu.left, mRectMenu.top, mRectMenu.right, mRectMenu.bottom);
         }
-        if (mSwipeModel == ViewHolder.SwipeModel.RIGHT) {
-            mRectMenu.left = mRectContent.right;
-            mScrollRange[0] = 0;
-            mScrollRange[1] = mMenuView.getMeasuredWidth();
-        } else if (mSwipeModel == ViewHolder.SwipeModel.LEFT) {
-            mRectMenu.left = mRectContent.left - mMenuView.getMeasuredWidth();
-            mScrollRange[0] = mMenuView.getMeasuredWidth() * -1;
-            mScrollRange[1] = 0;
-        }
-        mRectMenu.right = mRectMenu.left + mMenuView.getMeasuredWidth();
-        mRectMenu.top = mRectContent.top;
-        mRectMenu.bottom = mRectMenu.top + mMenuView.getMeasuredHeight();
-        LogUtil.d("Rect MenuView  -> [left{0},top{1},right{2},bottom{3}]",
-                mRectMenu.left, mRectMenu.top, mRectMenu.right, mRectMenu.bottom);
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         mContentView.layout(mRectContent.left, mRectContent.top, mRectContent.right, mRectContent.bottom);
-        mMenuView.layout(mRectMenu.left, mRectMenu.top, mRectMenu.right, mRectMenu.bottom);
+        if (mSwipeModel != SwipeModel.NONE) {
+            mMenuView.layout(mRectMenu.left, mRectMenu.top, mRectMenu.right, mRectMenu.bottom);
+        }
     }
 
     // 设定滑动条件，满足位移条件才判定为横向滑动，拦截响应整个滑动事件
@@ -176,6 +192,10 @@ public class SwipeLayout extends ViewGroup {
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
+
+        if (mSwipeModel == SwipeModel.NONE) {
+            return super.onTouchEvent(ev);
+        }
 
         final int action = ev.getAction();
         switch (action & MotionEvent.ACTION_MASK) {
@@ -246,7 +266,7 @@ public class SwipeLayout extends ViewGroup {
     /**
      * 设置侧栏菜单显示位置
      */
-    public void setSwipeModel(int swipeModel) {
+    public void setSwipeModel(@SwipeModel int swipeModel) {
         this.mSwipeModel = swipeModel;
     }
 
@@ -260,6 +280,18 @@ public class SwipeLayout extends ViewGroup {
         this.addView(mContentView);
         this.addView(mMenuView);
     }
+
+    /**
+     * 设置视图
+     *
+     * @param contentView   content view
+     * @param menuLayoutRes {@link SwipeLayout#DEFAULT_SWIPE_MENU_LAYOUT_DEL}
+     */
+    public void setView(@NonNull View contentView, int menuLayoutRes) {
+        View menuView = LayoutInflater.from(contentView.getContext()).inflate(menuLayoutRes, this, false);
+        this.setView(contentView, menuView);
+    }
+
 
     public View getContentView() {
         return this.mContentView;
@@ -277,11 +309,11 @@ public class SwipeLayout extends ViewGroup {
         boolean isOpen = 1f * Math.abs(getScrollX()) / mMenuView.getMeasuredWidth() >= AUTO_SCROLL_OPEN_PERCENT;
         LogUtil.d("{0}/{1}={2}", getScrollX(), mMenuView.getMeasuredWidth(), (getScrollX()) / mMenuView.getMeasuredWidth());
         // 右菜单
-        if (mSwipeModel == ViewHolder.SwipeModel.RIGHT) {
+        if (mSwipeModel == SwipeModel.RIGHT) {
             scrollTo(isOpen ? menuWidth : 0, 0);
         }
         // 左菜单
-        else if (mSwipeModel == ViewHolder.SwipeModel.LEFT) {
+        else if (mSwipeModel == SwipeModel.LEFT) {
             scrollTo(isOpen ? menuWidth * -1 : 0, 0);
         }
     }
@@ -304,17 +336,17 @@ public class SwipeLayout extends ViewGroup {
             return false;
         }
         // 不能横向滑动
-        if (mSwipeModel == ViewHolder.SwipeModel.NONE) {
+        if (mSwipeModel == SwipeModel.NONE) {
             return false;
         }
         // 滑动方向错误，不满足: 右菜单 - 左滑 规则
         // 除非左滑显示右菜单
-        if (mSwipeModel == ViewHolder.SwipeModel.RIGHT && currX > mDownX) {
+        if (mSwipeModel == SwipeModel.RIGHT && currX > mDownX) {
             return getScrollX() > 0;
         }
         // 滑动方向错误，不满足: 左菜单 - 右滑
         // 除非右滑显示左菜单
-        if (mSwipeModel == ViewHolder.SwipeModel.LEFT && currX < mDownX) {
+        if (mSwipeModel == SwipeModel.LEFT && currX < mDownX) {
             return getScrollX() < 0;
         }
         return true;
@@ -341,4 +373,21 @@ public class SwipeLayout extends ViewGroup {
         }
         return offsetX4Result;
     }
+
+
+    /**
+     * 滑动模式
+     */
+    @IntDef({
+            SwipeModel.NONE,
+            SwipeModel.LEFT,
+            SwipeModel.RIGHT
+    })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface SwipeModel {
+        int NONE = 0;
+        int LEFT = 1;
+        int RIGHT = 2;
+    }
 }
+

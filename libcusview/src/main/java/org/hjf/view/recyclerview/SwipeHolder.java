@@ -8,22 +8,20 @@ import android.view.View;
  */
 public final class SwipeHolder extends ViewHolder {
 
-    private SwipeLayout mSwipeLayout;
+    private View menuView, contentView;
 
-    /**
-     * use {@link ViewHolder.Build} create object.
-     */
-    SwipeHolder(SwipeLayout itemView) {
+    public SwipeHolder(SwipeLayout itemView) {
         super(itemView);
-        mSwipeLayout = itemView;
+        menuView = itemView.getMenuView();
+        contentView = itemView.getContentView();
     }
 
     public View getMenuView() {
-        return this.mSwipeLayout.getMenuView();
+        return menuView;
     }
 
     public View getContentView() {
-        return this.mSwipeLayout.getContentView();
+        return contentView;
     }
 
 }
