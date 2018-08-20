@@ -8,20 +8,45 @@ import android.view.View;
  */
 public final class SwipeHolder extends ViewHolder {
 
-    private View menuView, contentView;
+    private SwipeLayout itemView;
 
     public SwipeHolder(SwipeLayout itemView) {
         super(itemView);
-        menuView = itemView.getMenuView();
-        contentView = itemView.getContentView();
+        this.itemView = itemView;
     }
 
     public View getMenuView() {
-        return menuView;
+        return itemView.getMenuView();
     }
 
     public View getContentView() {
-        return contentView;
+        return itemView.getContentView();
     }
 
+    public void open() {
+        this.itemView.open();
+    }
+
+    public void close() {
+        this.itemView.close();
+    }
+
+    @Override
+    protected void setOnViewClickListener(final OnViewClickListener onItemClickListener, int[] clickIds) {
+        if (super.onClickListener == null) {
+            super.onClickListener = new View.OnClickListener() {
+
+                @Override
+                public void onClick(View v) {
+                    if (v.getParent() == SwipeHolder.this.getMenuView()) {
+                        close();
+                    }
+                    if (onItemClickListener != null) {
+                        onItemClickListener.onViewClickListener(v, SwipeHolder.this.getItemPosition());
+                    }
+                }
+            };
+        }
+        super.setOnViewClickListener(onItemClickListener, clickIds);
+    }
 }

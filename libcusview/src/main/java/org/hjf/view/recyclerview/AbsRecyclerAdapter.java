@@ -10,8 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.hjf.log.LogUtil;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,46 +45,13 @@ public abstract class AbsRecyclerAdapter<T> extends RecyclerView.Adapter<ViewHol
     public final ViewHolder onCreateViewHolder(ViewGroup parent, int itemViewType) {
         View layoutView = LayoutInflater.from(mContextInAdapter).inflate(getLayoutRes(itemViewType), parent, false);
         final ViewHolder viewHolder = getViewHolder(layoutView, itemViewType);
-
         // click
         if (this.onItemClickListener != null && clickIds != null) {
-            View.OnClickListener onClickListener = new View.OnClickListener() {
-
-                @Override
-                public void onClick(View v) {
-                    if (onItemClickListener != null) {
-                        onItemClickListener.onViewClickListener(v, viewHolder.getItemPosition());
-                    }
-                }
-            };
-            for (int clickId : clickIds) {
-                View view = viewHolder.getView(clickId);
-                if (view != null) {
-                    view.setOnClickListener(onClickListener);
-                } else {
-                    LogUtil.e("Not found View, no set click.");
-                }
-            }
+            viewHolder.setOnViewClickListener(onItemClickListener, clickIds);
         }
         // long click
         if (onItemLongClickListener != null && longClickIds != null) {
-            View.OnLongClickListener onLongClickListener = new View.OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-                    if (onItemLongClickListener != null) {
-                        return onItemLongClickListener.onViewLongClickListener(v, viewHolder.getItemPosition());
-                    }
-                    return false;
-                }
-            };
-            for (int longClickId : longClickIds) {
-                View view = viewHolder.getView(longClickId);
-                if (view != null) {
-                    view.setOnLongClickListener(onLongClickListener);
-                } else {
-                    LogUtil.e("Not found View, no set long click.");
-                }
-            }
+            viewHolder.setOnViewLongClickListener(onItemLongClickListener, longClickIds);
         }
         return viewHolder;
     }
@@ -97,6 +62,7 @@ public abstract class AbsRecyclerAdapter<T> extends RecyclerView.Adapter<ViewHol
         // for onViewClickListener and onViewLongClickListener
         holder.setItemPosition(position);
 
+        // bind data on view
         onBindViewHolder(holder, this.mData.get(position), position);
     }
 

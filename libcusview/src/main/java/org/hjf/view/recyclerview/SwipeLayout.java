@@ -245,7 +245,14 @@ public class SwipeLayout extends ViewGroup {
             case MotionEvent.ACTION_CANCEL:
                 // 松手操作
             case MotionEvent.ACTION_UP:
-                autoSelectActionAfterUp();
+                // show swipe menu layout
+                if (isOpen()) {
+                    open();
+                }
+                // hide swipe menu layout
+                else {
+                    close();
+                }
                 isHorizontalScroll = false;
                 // 恢复父控件的拦截功能
                 requestDisallowInterceptTouchEvent(false);
@@ -302,21 +309,37 @@ public class SwipeLayout extends ViewGroup {
     }
 
     /**
-     * 当手势抬起时，自动判断打开或关闭侧栏菜单
+     * swipe menu layout has display on screen
+     *
+     * @return true is display
      */
-    private void autoSelectActionAfterUp() {
-        final int menuWidth = mMenuView.getMeasuredWidth();
-        boolean isOpen = 1f * Math.abs(getScrollX()) / mMenuView.getMeasuredWidth() >= AUTO_SCROLL_OPEN_PERCENT;
+    private boolean isOpen() {
         LogUtil.d("{0}/{1}={2}", getScrollX(), mMenuView.getMeasuredWidth(), (getScrollX()) / mMenuView.getMeasuredWidth());
+        return 1f * Math.abs(getScrollX()) / mMenuView.getMeasuredWidth() >= AUTO_SCROLL_OPEN_PERCENT;
+    }
+
+    /**
+     * show swipe menu layout
+     */
+    void open() {
+        final int menuWidth = mMenuView.getMeasuredWidth();
         // 右菜单
         if (mSwipeModel == SwipeModel.RIGHT) {
-            scrollTo(isOpen ? menuWidth : 0, 0);
+            scrollTo(menuWidth, 0);
         }
         // 左菜单
         else if (mSwipeModel == SwipeModel.LEFT) {
-            scrollTo(isOpen ? menuWidth * -1 : 0, 0);
+            scrollTo(menuWidth * -1, 0);
         }
     }
+
+    /**
+     * hide swipe menu layout
+     */
+    void close() {
+        scrollTo(0, 0);
+    }
+
 
     /**
      * 是否是横向滑动
