@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <declare-styleable name="RefreshLayout">
+        <attr name="enable_refresh" format="boolean" />
+        <attr name="enable_load_more" format="boolean" />
+        <attr name="refresh_head_layout" format="reference" />
+        <attr name="reset_animal_duration_millis" format="integer" />
+        <attr name="refresh_head_show_model" format="enum">
+            <enum name="EXPAND" value="1" />
+            <enum name="COVER" value="2" />
+        </attr>
+        <attr name="load_more_head_show_model" format="enum">
+            <enum name="EXPAND" value="1" />
+            <enum name="COVER" value="2" />
+        </attr>
+        <attr name="load_more_foot_layout" format="reference" />
+        <attr name="load_more_where_remain_item" format="integer" />
+    </declare-styleable>
+
+
+    <!-- 水滴动画描述 -->
+    <declare-styleable name="DripView">
+        <attr name="top_circle_radius" format="dimension" />
+        <attr name="bottom_circle_radius" format="dimension" />
+        <attr name="circle_center_max_distance_y" format="dimension" />
+        <attr name="drip_color" format="color" />
+    </declare-styleable>
+
+</resources>

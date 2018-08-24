@@ -6,9 +6,9 @@
     <color name="light">#fff3f3f3</color>
     <color name="black">#ff000000</color>
     <color name="red">#ffff0000</color>
-    <color name="green">#ff00ff00</color>
+    <color name="green">#2abb9c</color>
     <color name="blue">#ff0000ff</color>
-    <color name="gay">#9E9D83 </color>
+    <color name="gay">#9E9D83</color>
     <color name="transparent">#00000000</color>
 
 </resources>
