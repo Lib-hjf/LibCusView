@@ -10,8 +10,6 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import org.hjf.util.ParamUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +50,7 @@ public abstract class AbsListAdapter<T> extends BaseAdapter {
 	}
 
 	public void removeData(int index){
-		if (index != ParamUtils.getValueInRange(index, 0, this.mDataList.size())) {
+		if (index != getValueInRange(index, 0, this.mDataList.size())) {
 			return ;
 		}
 		this.mDataList.remove(index);
@@ -78,7 +76,7 @@ public abstract class AbsListAdapter<T> extends BaseAdapter {
 
 	@Nullable
 	public T getData(int index) {
-		if (index != ParamUtils.getValueInRange(index, 0, this.mDataList.size())) {
+		if (index != getValueInRange(index, 0, this.mDataList.size())) {
 			return null;
 		}
 		return this.mDataList.get(index);
@@ -153,5 +151,9 @@ public abstract class AbsListAdapter<T> extends BaseAdapter {
 			TextView textView = this.getView(resId);
 			textView.setText(text);
 		}
+	}
+
+	private static int getValueInRange(int value, int min, int max){
+		return value < min ? min : (value > max ? max : value);
 	}
 }
