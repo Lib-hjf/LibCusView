@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<org.hjf.view.refresh.view.DefaultAutoLoadMoreFootView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
+    tools:background="@color/red_pure">
+
+    <org.hjf.view.progress.TwoCircleRotateProgressView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        app:circle_distanceX="5dp"
+        app:direction="Clockwise"
+        app:duration="1000"
+        app:max_radius="7dp"
+        app:min_radius="3dp"
+        app:one_circle_color="@color/grass_green"
+        app:two_circle_Color="@color/pink" />
+
+</org.hjf.view.refresh.view.DefaultAutoLoadMoreFootView>

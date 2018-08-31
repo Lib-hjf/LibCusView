@@ -1,10 +1,11 @@
-package org.hjf.view.refresh;
+package org.hjf.view.refresh.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.TextView;
 
 import org.hjf.view.R;
+import org.hjf.view.refresh.BaseAttachView;
 
 public class DefaultLoadMoreFootView extends BaseAttachView {
 

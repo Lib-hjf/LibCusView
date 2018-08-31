@@ -25,6 +25,8 @@ public abstract class BaseAttachView extends RelativeLayout implements IAttachVi
 
     public BaseAttachView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        // ignore log cat
+        LogUtil.addIgnoreClassPath(BaseAttachView.class.getName());
     }
 
     protected abstract void initView();

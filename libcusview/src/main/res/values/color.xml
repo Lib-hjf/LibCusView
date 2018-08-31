@@ -2,13 +2,26 @@
 <resources>
 
     <!-- Common Color -->
-    <color name="white">#ffffffff</color>
-    <color name="light">#fff3f3f3</color>
-    <color name="black">#ff000000</color>
-    <color name="red">#ffff0000</color>
-    <color name="green">#2abb9c</color>
-    <color name="blue">#ff0000ff</color>
-    <color name="gay">#9E9D83</color>
-    <color name="transparent">#00000000</color>
+    <color name="transparent">#000000</color>
+    <color name="white">#f3f3f3</color>
+    <color name="red_pure">#ff0000</color>
+    <color name="red">#ff4136</color>
+    <color name="orange">#ff851b</color>
+    <color name="pink">#ff69b4</color>
+    <color name="golden">#c37e00</color>
+    <color name="yellow">#ffdc00</color>
+    <color name="lime">#01ff90</color>
+    <color name="grass_green">#2abb9c</color>
+    <color name="green_pure">#00ff00</color>
+    <color name="green">#2ecc40</color>
+    <color name="tea">#b7ba6b</color>
+    <color name="cyan">#39cccc</color>
+    <color name="indigo">#0074d9</color>
+    <color name="blue">#0074d9</color>
+    <color name="blue_pure">#0000ff</color>
+    <color name="purple">#b10dc9</color>
+    <color name="black">#111111</color>
+    <color name="gray">#aaaaaa</color>
+    <color name="silver">#dddddd</color>
 
 </resources>

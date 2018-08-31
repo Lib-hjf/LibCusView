@@ -6,26 +6,36 @@
         <attr name="enable_refresh" format="boolean" />
         <attr name="enable_load_more" format="boolean" />
         <attr name="refresh_head_layout" format="reference" />
+        <attr name="load_more_foot_layout" format="reference" />
+        <attr name="auto_load_more_foot_layout" format="reference" />
+        <attr name="empty_view_layout" format="reference" />
         <attr name="reset_animal_duration_millis" format="integer" />
+        <attr name="load_more_when_residual_item" format="integer" />
         <attr name="refresh_head_show_model" format="enum">
             <enum name="EXPAND" value="1" />
             <enum name="COVER" value="2" />
         </attr>
-        <attr name="load_more_head_show_model" format="enum">
-            <enum name="EXPAND" value="1" />
-            <enum name="COVER" value="2" />
-        </attr>
-        <attr name="load_more_foot_layout" format="reference" />
-        <attr name="load_more_where_remain_item" format="integer" />
     </declare-styleable>
 
 
-    <!-- 水滴动画描述 -->
     <declare-styleable name="DripView">
         <attr name="top_circle_radius" format="dimension" />
         <attr name="bottom_circle_radius" format="dimension" />
         <attr name="circle_center_max_distance_y" format="dimension" />
         <attr name="drip_color" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="TwoCircleRotateProgressView">
+        <attr name="min_radius" format="dimension" />
+        <attr name="max_radius" format="dimension" />
+        <attr name="one_circle_color" format="color" />
+        <attr name="two_circle_Color" format="color" />
+        <attr name="circle_distanceX" format="dimension" />
+        <attr name="duration" format="integer" />
+        <attr name="direction" format="enum">
+            <enum name="Clockwise" value="1" />
+            <enum name="AntiClockwise" value="2" />
+        </attr>
     </declare-styleable>
 
 </resources>

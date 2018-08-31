@@ -1,4 +1,4 @@
-package org.hjf.view.refresh;
+package org.hjf.view.refresh.view;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
@@ -21,7 +21,7 @@ import org.hjf.view.R;
 
 
 /**
- * arrow bitmap 变小 下移 转动
+ * default draw at view centerX, bottomY
  */
 public class DripView extends View {
 
@@ -77,16 +77,16 @@ public class DripView extends View {
         // width = (max circle radius + stroke_width) * 2
         if (modeW != MeasureSpec.EXACTLY) {
             viewWidth = (Math.max(topCircle.getMaxRadius(), bottomCircle.getMaxRadius()) + STROKE_WIDTH) * 2;
+
+            viewWidth = viewWidth + getPaddingStart() + getPaddingEnd();
         }
 
         // height = top circle radius + bottom circle radius + tow circle center distance
         if (modeH != MeasureSpec.EXACTLY) {
             viewHeight = topCircle.getMaxRadius() + bottomCircle.getMaxRadius() + twoCircleCenterYDistanceMax + STROKE_WIDTH * 2;
+            // padding
+            viewHeight = viewHeight + getPaddingTop() + getPaddingBottom();
         }
-
-        // padding
-        viewWidth = viewWidth + getPaddingStart() + getPaddingEnd();
-        viewHeight = viewHeight + getPaddingTop() + getPaddingBottom();
 
         //这里将宽度和高度与Google为我们设定的建议最低宽高对比，确保我们要求的尺寸不低于建议的最低宽高。
         viewWidth = Math.max(viewWidth, getSuggestedMinimumWidth());
@@ -102,11 +102,9 @@ public class DripView extends View {
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         LogUtil.d("size: Drip View result W{0} H{1} twoCircleCenterYDistanceMax={2}", w, h, twoCircleCenterYDistanceMax);
 
-        int maxRadius = Math.max(topCircle.getRadius(), bottomCircle.getRadius());
-
         // display form bottom
         // so. bottom circle always close to DripView's bottom, centerY changed follow radius change.
-        bottomCircle.setCenterX(getPaddingStart() + STROKE_WIDTH + maxRadius);
+        bottomCircle.setCenterX(getPaddingStart() + (int) ((w - getPaddingStart()) * 0.5f));
         bottomCircle.setCenterY(h - getPaddingBottom() - STROKE_WIDTH - bottomCircle.getRadius());
         LogUtil.d("size: bottom circle CenterXY=[{0}, {1}] radius={2}", bottomCircle.getCenterX(), bottomCircle.getCenterY(), bottomCircle.getRadius());
 
@@ -272,6 +270,9 @@ public class DripView extends View {
         bottomCircle = new Circle();
         bottomCircle.setMaxRadius(BOTTOM_CIRCLE_MAX_RADIUS);
         bottomCircle.setRadius(BOTTOM_CIRCLE_MAX_RADIUS);
+
+        // ignore log cat
+        LogUtil.addIgnoreClassPath(DripView.class.getName());
     }
 
 

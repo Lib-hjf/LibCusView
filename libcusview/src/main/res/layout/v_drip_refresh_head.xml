@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<org.hjf.view.refresh.DripRefreshHeadView xmlns:android="http://schemas.android.com/apk/res/android"
+<org.hjf.view.refresh.view.DripRefreshHeadView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/refreshHeadView"
@@ -7,7 +7,7 @@
     android:layout_height="100dp"
     tools:background="@color/red">
 
-    <org.hjf.view.refresh.DripView
+    <org.hjf.view.refresh.view.DripView
         android:id="@+id/drip_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -15,8 +15,8 @@
         android:layout_centerHorizontal="true"
         app:bottom_circle_radius="4dp"
         app:circle_center_max_distance_y="48dp"
-        app:drip_color="@color/green"
+        app:drip_color="@color/grass_green"
         app:top_circle_radius="16dp"
-        tools:background="@color/green" />
+        tools:background="@color/golden" />
 
-</org.hjf.view.refresh.DripRefreshHeadView>
+</org.hjf.view.refresh.view.DripRefreshHeadView>

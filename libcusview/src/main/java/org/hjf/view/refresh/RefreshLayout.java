@@ -20,8 +20,8 @@ import org.hjf.log.LogUtil;
 import org.hjf.view.R;
 
 /**
- * TODO COVER 实现方式
- * TODO 自动加载更多机制
+ * TODO COVER HEAD 实现方式
+ * <p>
  */
 public class RefreshLayout extends ViewGroup {
 
@@ -38,43 +38,40 @@ public class RefreshLayout extends ViewGroup {
     /**
      * not to auto load more data
      */
-    private static final int NOT_AUTO_LOAD_MORE_DATA = -1;
+    static final int NOT_AUTO_LOAD_MORE_DATA = -1;
     /**
      * 横向滑动距离 / 竖向滑动距离  最小比例
      */
     private static final float SCROLL_JUDGE_VERTICAL_HORIZONTAL = 1.0f;
     private static final float DAMPING = 0.4f;
 
+
     /**
      * Cache the touch slop from the context that created the view.
      * 刷新UI最小移动距离，没到这个距离不刷新UI
      */
     private float mTouchSlop;
-
-
-    @LayoutRes
-    private int refreshHeadLayoutRes = R.layout.v_drip_refresh_head;
     private int refreshHeadViewShowModel = RefreshLayout.SHOW_MODE_EXPAND;
-    @LayoutRes
-    private int loadMoreFootLayoutRes = R.layout.v_default_load_more_foot;
-    private int loadMoreFootViewShowModel = RefreshLayout.SHOW_MODE_EXPAND;
     private boolean enableRefresh;
     private boolean enableLoadMore;
-    private int loadMoreWhereRemainItemNum = RefreshLayout.NOT_AUTO_LOAD_MORE_DATA;
     private OnLoadListener mLoadListener;
-
-    /**
-     * view and display area
-     */
-    private IAttachMover mAttachMover;
+    private BaseContentViewObserver mContentViewObserver;
+    private int mLoadMoreWhenResidualItemNum = RefreshLayout.NOT_AUTO_LOAD_MORE_DATA;
+    // content view
+    private Rect mRect4Content = new Rect();
+    private View mContentView;
+    // attach view
+    @Nullable
+    private Rect mRect4Head, mRect4Foot, mRect4AutoLoadFoot, mRect4EmptyView;
     @Nullable
     private BaseAttachView mFootView;
     @Nullable
     private BaseAttachView mHeadView;
-    private View mContentView;
-    private Rect mRect4Content = new Rect();
-    private Rect mRect4Head = new Rect();
-    private Rect mRect4Foot = new Rect();
+    @Nullable
+    private BaseAttachView mAutoLoadFootView;
+    @Nullable
+    private View mEmptyView;
+    private boolean isAddedEmptyView = false;
     // 上一次有效计算的X座标，每一次有效计算都要刷新一次
     private float mLastY;
     private float mDownX, mDownY;
@@ -97,8 +94,9 @@ public class RefreshLayout extends ViewGroup {
         super(context, attrs, defStyleAttr);
         mTouchSlop = (int) (ViewConfiguration.get(getContext()).getScaledTouchSlop() * 0.5f);
         mScroller = new Scroller(context);
+        // ignore log cat
+        LogUtil.addIgnoreClassPath(RefreshLayout.class.getName());
         initFromAttributes(context, attrs, defStyleAttr, 0);
-        initAttachView();
     }
 
     @Override
@@ -106,9 +104,11 @@ public class RefreshLayout extends ViewGroup {
         if (mContentView == null) {
             initContentView();
         }
+
         final LayoutParams lpContentView = mContentView.getLayoutParams();
         measureChild(mContentView, widthMeasureSpec, heightMeasureSpec);
 
+        // head view
         if (enableRefresh && mHeadView != null) {
             final LayoutParams lpHeadView = mHeadView.getLayoutParams();
             if (lpHeadView.width == RelativeLayout.LayoutParams.MATCH_PARENT
@@ -119,6 +119,7 @@ public class RefreshLayout extends ViewGroup {
             measureChild(mHeadView, widthMeasureSpec, heightMeasureSpec);
         }
 
+        // foot view
         if (enableLoadMore && mFootView != null) {
             final LayoutParams lpFootView = mFootView.getLayoutParams();
             if (lpFootView.width == RelativeLayout.LayoutParams.MATCH_PARENT
@@ -127,6 +128,28 @@ public class RefreshLayout extends ViewGroup {
                 mFootView.setLayoutParams(lpFootView);
             }
             measureChild(mFootView, widthMeasureSpec, heightMeasureSpec);
+        }
+
+        // auto load foot view
+        if (mLoadMoreWhenResidualItemNum != NOT_AUTO_LOAD_MORE_DATA && mAutoLoadFootView != null) {
+            final LayoutParams lpAutoLoadFootView = mAutoLoadFootView.getLayoutParams();
+            if (lpAutoLoadFootView.width == RelativeLayout.LayoutParams.MATCH_PARENT
+                    || lpAutoLoadFootView.width == RelativeLayout.LayoutParams.WRAP_CONTENT) {
+                lpAutoLoadFootView.width = lpContentView.width;
+                mAutoLoadFootView.setLayoutParams(lpAutoLoadFootView);
+            }
+            measureChild(mAutoLoadFootView, widthMeasureSpec, heightMeasureSpec);
+        }
+
+        // empty view in refresh layout
+        if (mEmptyView != null && isAddedEmptyView) {
+            final LayoutParams lpEmptyView = mEmptyView.getLayoutParams();
+            if (lpEmptyView.width == RelativeLayout.LayoutParams.MATCH_PARENT
+                    || lpEmptyView.width == RelativeLayout.LayoutParams.WRAP_CONTENT) {
+                lpEmptyView.width = lpContentView.width;
+                mEmptyView.setLayoutParams(lpEmptyView);
+            }
+            measureChild(mEmptyView, widthMeasureSpec, heightMeasureSpec);
         }
 
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -138,6 +161,9 @@ public class RefreshLayout extends ViewGroup {
 
         // head view show rect range
         if (enableRefresh && mHeadView != null) {
+            if (mRect4Head == null) {
+                mRect4Head = new Rect();
+            }
             mRect4Head.left = 0;
             mRect4Head.top = -mHeadView.getMeasuredHeight();
             mRect4Head.right = mRect4Head.left + mHeadView.getMeasuredWidth();
@@ -156,6 +182,9 @@ public class RefreshLayout extends ViewGroup {
 
         // foot view show rect range
         if (enableLoadMore && mFootView != null) {
+            if (mRect4Foot == null) {
+                mRect4Foot = new Rect();
+            }
             mRect4Foot.left = 0;
             mRect4Foot.top = mContentView.getMeasuredHeight();
             mRect4Foot.right = mRect4Foot.left + mFootView.getMeasuredWidth();
@@ -163,18 +192,53 @@ public class RefreshLayout extends ViewGroup {
             LogUtil.d("Rect Foot View  -> [left{0},top{1},right{2},bottom{3}]",
                     mRect4Foot.left, mRect4Foot.top, mRect4Foot.right, mRect4Foot.bottom);
         }
+
+        // auto load foot view show rect range
+        if (mLoadMoreWhenResidualItemNum != NOT_AUTO_LOAD_MORE_DATA && mAutoLoadFootView != null) {
+            if (mRect4AutoLoadFoot == null) {
+                mRect4AutoLoadFoot = new Rect();
+            }
+            mRect4AutoLoadFoot.left = 0;
+            mRect4AutoLoadFoot.top = mContentView.getMeasuredHeight() - mAutoLoadFootView.getMeasuredHeight();
+            mRect4AutoLoadFoot.right = mRect4AutoLoadFoot.left + mAutoLoadFootView.getMeasuredWidth();
+            mRect4AutoLoadFoot.bottom = mRect4AutoLoadFoot.top + mAutoLoadFootView.getMeasuredHeight();
+            LogUtil.d("Rect Auto Load Foot View  -> [left{0},top{1},right{2},bottom{3}]",
+                    mRect4AutoLoadFoot.left, mRect4AutoLoadFoot.top, mRect4AutoLoadFoot.right, mRect4AutoLoadFoot.bottom);
+        }
+
+        // empty view in refresh layout show rect range
+        if (mEmptyView != null && isAddedEmptyView) {
+            if (mRect4EmptyView == null) {
+                mRect4EmptyView = new Rect();
+            }
+            mRect4EmptyView.left = 0;
+            mRect4EmptyView.top = 0;
+            mRect4EmptyView.right = mRect4EmptyView.left + mEmptyView.getMeasuredWidth();
+            mRect4EmptyView.bottom = mRect4EmptyView.top + mEmptyView.getMeasuredHeight();
+            LogUtil.d("Rect Empty View  -> [left{0},top{1},right{2},bottom{3}]",
+                    mRect4EmptyView.left, mRect4EmptyView.top, mRect4EmptyView.right, mRect4EmptyView.bottom);
+        }
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        if (enableRefresh && mHeadView != null) {
+
+        if (enableRefresh && mHeadView != null && mRect4Head != null) {
             mHeadView.layout(mRect4Head.left, mRect4Head.top, mRect4Head.right, mRect4Head.bottom);
         }
 
         mContentView.layout(mRect4Content.left, mRect4Content.top, mRect4Content.right, mRect4Content.bottom);
 
-        if (enableLoadMore && mFootView != null) {
+        if (enableLoadMore && mFootView != null && mRect4Foot != null) {
             mFootView.layout(mRect4Foot.left, mRect4Foot.top, mRect4Foot.right, mRect4Foot.bottom);
+        }
+
+        if (mLoadMoreWhenResidualItemNum != NOT_AUTO_LOAD_MORE_DATA && mAutoLoadFootView != null && mRect4AutoLoadFoot != null) {
+            mAutoLoadFootView.layout(mRect4AutoLoadFoot.left, mRect4AutoLoadFoot.top, mRect4AutoLoadFoot.right, mRect4AutoLoadFoot.bottom);
+        }
+
+        if (mEmptyView != null && isAddedEmptyView && mRect4EmptyView != null) {
+            mEmptyView.layout(mRect4EmptyView.left, mRect4EmptyView.top, mRect4EmptyView.right, mRect4EmptyView.bottom);
         }
     }
 
@@ -230,9 +294,12 @@ public class RefreshLayout extends ViewGroup {
                         fingerScrollAction = fingerScrollY > 0 ? FINGER_SCROLL_ACTION_REFRESH : FINGER_SCROLL_ACTION_LOAD_MORE;
                         LogUtil.d("set fingerScrollAction={0}  fingerScrollY{1}", fingerScrollAction, fingerScrollY);
                     }
-
                     // 刷新上次计算点
                     mLastY = ev.getY();
+                    // 如果处于自动加载状态，不能进行刷新、加载更多动作
+                    if (/*fingerScrollAction == FINGER_SCROLL_ACTION_LOAD_MORE && */mContentViewObserver.isAutoLoading()) {
+                        return true;
+                    }
                     final int moveY4Ask = (int) (fingerScrollY * (1 - DAMPING)) * -1;
                     // 实际计算后可以位移的量
                     LogUtil.d("get scrollable distance request : scrolled={0}  moveY4Ask={1}", getScrollY(), moveY4Ask);
@@ -253,8 +320,10 @@ public class RefreshLayout extends ViewGroup {
                         mLoadListener.onRefresh();
                     }
                 }
-                // load more
-                else if (enableLoadMore && fingerScrollAction == FINGER_SCROLL_ACTION_LOAD_MORE && mFootView != null && mFootView.canLoad(mScrollY)) {
+                // load more. if auto loading, no load more
+                else if (enableLoadMore && fingerScrollAction == FINGER_SCROLL_ACTION_LOAD_MORE
+                        && mFootView != null && mFootView.canLoad(mScrollY)
+                        && !mContentViewObserver.isAutoLoading()) {
                     mFootView.onLoading();
                     if (mLoadListener != null) {
                         mLoadListener.onLoadMore();
@@ -266,7 +335,6 @@ public class RefreshLayout extends ViewGroup {
                 }
                 break;
         }
-
         return super.onTouchEvent(ev);
     }
 
@@ -302,14 +370,32 @@ public class RefreshLayout extends ViewGroup {
      */
     @MainThread
     public void loadComplete() {
-        if (fingerScrollAction == FINGER_SCROLL_ACTION_REFRESH && enableRefresh && mHeadView != null && mHeadView.canLoad(mScrollY)) {
+        if (fingerScrollAction == FINGER_SCROLL_ACTION_REFRESH && enableRefresh
+                && mHeadView != null && mHeadView.canLoad(mScrollY)) {
             mHeadView.onComplete();
         }
-        if (fingerScrollAction == FINGER_SCROLL_ACTION_LOAD_MORE && enableLoadMore && mFootView != null && mFootView.canLoad(mScrollY)) {
+        if (fingerScrollAction == FINGER_SCROLL_ACTION_LOAD_MORE && enableLoadMore
+                && mFootView != null && mFootView.canLoad(mScrollY)) {
             mFootView.onComplete();
+        }
+        if (mLoadMoreWhenResidualItemNum != NOT_AUTO_LOAD_MORE_DATA && mContentViewObserver.isAutoLoading()) {
+            mContentViewObserver.onAutoLoadComplete();
         }
         fingerScrollAction = FINGER_SCROLL_ACTION_NONE;
         resetScrollAnimal();
+    }
+
+    // activity onResume call
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+    }
+
+    // activity onDestroy call, only once
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mContentViewObserver.destroy();
     }
 
     /**
@@ -320,8 +406,23 @@ public class RefreshLayout extends ViewGroup {
         postInvalidate();
     }
 
-    public void setLoadListener(@NonNull OnLoadListener mLoadListener) {
-        this.mLoadListener = mLoadListener;
+    public void setLoadListener(@NonNull OnLoadListener loadListener) {
+        this.mLoadListener = loadListener;
+        if (this.mContentViewObserver != null) {
+            this.mContentViewObserver.setAutoLoadMoreResidualNum(mLoadMoreWhenResidualItemNum, mAutoLoadFootView, mLoadListener);
+        }
+    }
+
+    public void setAutoLoadMoreWhenResidualItemNum(int loadMoreWhenResidualItemNum) {
+        mLoadMoreWhenResidualItemNum = Math.max(NOT_AUTO_LOAD_MORE_DATA, loadMoreWhenResidualItemNum);
+        if (this.mContentViewObserver != null) {
+            this.mContentViewObserver.setAutoLoadMoreResidualNum(loadMoreWhenResidualItemNum, mAutoLoadFootView, mLoadListener);
+        }
+    }
+
+    @Nullable
+    public View getEmptyView() {
+        return mEmptyView;
     }
 
     /**
@@ -356,7 +457,7 @@ public class RefreshLayout extends ViewGroup {
         }
 
         // AttachMover 判定不能刷新
-        if (currY > mDownY && !mAttachMover.canMoved4HeadView()) {
+        if (currY > mDownY && !mContentViewObserver.isTop()) {
             LogUtil.d("AttachMover judge not to move.");
             return false;
         }
@@ -368,7 +469,7 @@ public class RefreshLayout extends ViewGroup {
         }
 
         // AttachMover 判定不能加载更多
-        if (currY < mDownY && !mAttachMover.canMoved4FootView()) {
+        if (currY < mDownY && !mContentViewObserver.isBottom()) {
             LogUtil.d("AttachMover judge not to move.");
             return false;
         }
@@ -378,7 +479,7 @@ public class RefreshLayout extends ViewGroup {
 
 
     private int getScrollableDistance(int moveY4Ask) {
-        int move4Result = 0;
+        int move4Result;
         int move4End = getScrollY() + moveY4Ask;
         int topPointY = 0;
         int bottomPointY = 0;
@@ -403,54 +504,37 @@ public class RefreshLayout extends ViewGroup {
         else {
             move4Result = bottomPointY - getScrollY();
         }
-
         return move4Result;
     }
 
-    private void initFromAttributes(Context context, AttributeSet attrs, int defStyleAttr,
-                                    int defStyleRes) {
-        final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.RefreshLayout, defStyleAttr, defStyleRes);
-        final int N = a.getIndexCount();
-        for (int i = 0; i < N; i++) {
-            int attr = a.getIndex(i);
-            // enableRefresh
-            if (attr == R.styleable.RefreshLayout_enable_refresh) {
-                enableRefresh = a.getBoolean(attr, false);
-            }
-            // enableRefresh
-            else if (attr == R.styleable.RefreshLayout_enable_load_more) {
-                enableLoadMore = a.getBoolean(attr, false);
-            }
-            // enableRefresh
-            else if (attr == R.styleable.RefreshLayout_load_more_where_remain_item) {
-                loadMoreWhereRemainItemNum = a.getInt(attr, RefreshLayout.NOT_AUTO_LOAD_MORE_DATA);
-            }
-            // refresh head layout res
-            else if (attr == R.styleable.RefreshLayout_refresh_head_layout) {
-                refreshHeadLayoutRes = a.getResourceId(attr, refreshHeadLayoutRes);
-            }
-            // load more layout res
-            else if (attr == R.styleable.RefreshLayout_load_more_foot_layout) {
-                loadMoreFootLayoutRes = a.getResourceId(attr, loadMoreFootLayoutRes);
-            }
-            // refresh head iew show model
-            else if (attr == R.styleable.RefreshLayout_refresh_head_show_model) {
-                refreshHeadViewShowModel = a.getInt(attr, RefreshLayout.SHOW_MODE_EXPAND);
-            }
-            // load more foot iew show model
-            else if (attr == R.styleable.RefreshLayout_load_more_head_show_model) {
-                loadMoreFootViewShowModel = a.getInt(attr, RefreshLayout.SHOW_MODE_EXPAND);
-            }
-            // reset animal duration millis
-            else if (attr == R.styleable.RefreshLayout_reset_animal_duration_millis) {
-                reset_animal_duration_millis = a.getInt(attr, reset_animal_duration_millis);
+    private void initContentView() {
+        // content view
+        if (getChildCount() > 1) {
+            throw new RuntimeException("Refresh layout child view must be one.");
+        }
+        mContentView = getChildAt(0);
+        if (mContentView == null) {
+            throw new RuntimeException("Refresh layout not found child view.");
+        }
+        mContentViewObserver = ContentViewObserverFactory.create(mContentView);
+        if (enableRefresh && mHeadView != null) {
+            addView(mHeadView);
+        }
+        if (enableLoadMore && mFootView != null) {
+            addView(mFootView);
+        }
+        if (mLoadMoreWhenResidualItemNum != NOT_AUTO_LOAD_MORE_DATA && mAutoLoadFootView != null) {
+            addView(mAutoLoadFootView);
+            this.mContentViewObserver.setAutoLoadMoreResidualNum(mLoadMoreWhenResidualItemNum, mAutoLoadFootView, mLoadListener);
+        }
+        if (mEmptyView != null && (isAddedEmptyView = !mContentViewObserver.bindEmptyView(mEmptyView))) {
+            if (isAddedEmptyView) {
+                addView(mEmptyView);
             }
         }
-        a.recycle();
     }
 
-    private void initAttachView() {
-
+    private void initAttachView(@LayoutRes int refreshHeadLayoutRes, @LayoutRes int loadMoreFootLayoutRes, @LayoutRes int autoLoadMoreFootLayoutRes, @LayoutRes int emptyViewLayoutRes) {
         // head view
         if (enableRefresh) {
             View tempHeadView = LayoutInflater.from(super.getContext()).inflate(refreshHeadLayoutRes, this, false);
@@ -475,24 +559,71 @@ public class RefreshLayout extends ViewGroup {
                 throw new RuntimeException("RefreshLayout ask load_more_foot_layout top view must extends " + BaseAttachView.class.getName());
             }
         }
-    }
-
-    private void initContentView() {
-        // content view
-        if (getChildCount() > 1) {
-            throw new RuntimeException("Refresh layout child view must be one.");
+        // auto load foot view
+        if (mLoadMoreWhenResidualItemNum != NOT_AUTO_LOAD_MORE_DATA) {
+            View tempAutoFootView = LayoutInflater.from(super.getContext()).inflate(autoLoadMoreFootLayoutRes, this, false);
+            if (tempAutoFootView instanceof BaseAttachView) {
+                mAutoLoadFootView = (BaseAttachView) tempAutoFootView;
+                mAutoLoadFootView.initView();
+            }
+            // error
+            else {
+                throw new RuntimeException("RefreshLayout ask auto_load_more_foot_layout top view must extends " + BaseAttachView.class.getName());
+            }
         }
-        mContentView = getChildAt(0);
-        if (mContentView == null) {
-            throw new RuntimeException("Refresh layout not found child view.");
-        }
-        mAttachMover = AttachMoverFactory.create(mContentView);
-        if (enableRefresh && mHeadView != null) {
-            addView(mHeadView);
-        }
-        if (enableLoadMore && mFootView != null) {
-            addView(mFootView);
+        // empty view
+        if (emptyViewLayoutRes != -1) {
+            mEmptyView = LayoutInflater.from(super.getContext()).inflate(emptyViewLayoutRes, this, false);
         }
     }
 
+    private void initFromAttributes(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+        final TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.RefreshLayout, defStyleAttr, defStyleRes);
+        final int N = a.getIndexCount();
+        @LayoutRes int emptyViewLayoutRes = -1;
+        @LayoutRes int refreshHeadLayoutRes = R.layout.v_drip_refresh_head;
+        @LayoutRes int loadMoreFootLayoutRes = R.layout.v_default_load_more_foot;
+        @LayoutRes int autoLoadMoreFootLayoutRes = R.layout.v_default_auto_load_more_foot;
+        for (int i = 0; i < N; i++) {
+            int attr = a.getIndex(i);
+            // enableRefresh
+            if (attr == R.styleable.RefreshLayout_enable_refresh) {
+                enableRefresh = a.getBoolean(attr, false);
+            }
+            // enableRefresh
+            else if (attr == R.styleable.RefreshLayout_enable_load_more) {
+                enableLoadMore = a.getBoolean(attr, false);
+            }
+            // enableRefresh
+            else if (attr == R.styleable.RefreshLayout_load_more_when_residual_item) {
+                mLoadMoreWhenResidualItemNum = a.getInt(attr, RefreshLayout.NOT_AUTO_LOAD_MORE_DATA);
+            }
+            // refresh head layout res
+            else if (attr == R.styleable.RefreshLayout_refresh_head_layout) {
+                refreshHeadLayoutRes = a.getResourceId(attr, refreshHeadLayoutRes);
+            }
+            // load more layout res
+            else if (attr == R.styleable.RefreshLayout_load_more_foot_layout) {
+                loadMoreFootLayoutRes = a.getResourceId(attr, loadMoreFootLayoutRes);
+            }
+            // auto load load more layout res
+            else if (attr == R.styleable.RefreshLayout_auto_load_more_foot_layout) {
+                autoLoadMoreFootLayoutRes = a.getResourceId(attr, autoLoadMoreFootLayoutRes);
+            }
+            // empty view layout res
+            else if (attr == R.styleable.RefreshLayout_empty_view_layout) {
+                emptyViewLayoutRes = a.getResourceId(attr, -1);
+            }
+            // refresh head iew show model
+            else if (attr == R.styleable.RefreshLayout_refresh_head_show_model) {
+                refreshHeadViewShowModel = a.getInt(attr, RefreshLayout.SHOW_MODE_EXPAND);
+            }
+            // reset animal duration millis
+            else if (attr == R.styleable.RefreshLayout_reset_animal_duration_millis) {
+                reset_animal_duration_millis = a.getInt(attr, reset_animal_duration_millis);
+            }
+        }
+        a.recycle();
+        initAttachView(refreshHeadLayoutRes, loadMoreFootLayoutRes, autoLoadMoreFootLayoutRes, emptyViewLayoutRes);
+    }
 }
