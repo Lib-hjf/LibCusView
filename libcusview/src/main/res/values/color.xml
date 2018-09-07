@@ -19,9 +19,9 @@
     <color name="indigo">#0074d9</color>
     <color name="blue">#0074d9</color>
     <color name="blue_pure">#0000ff</color>
-    <color name="purple">#b10dc9</color>
-    <color name="black">#111111</color>
-    <color name="gray">#aaaaaa</color>
+    <color name="grey">#aaaaaa</color>
     <color name="silver">#dddddd</color>
+    <color name="black">#111111</color>
+    <color name="purple">#b10dc9</color>
 
 </resources>

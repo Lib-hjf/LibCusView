@@ -22,6 +22,7 @@ import org.hjf.view.R;
 /**
  * TODO COVER HEAD 实现方式
  * <p>
+ * TODO 增加使用方式，采用AbsAdapter.buildRecyclerWrapView().set(...).build()
  */
 public class RefreshLayout extends ViewGroup {
 
@@ -418,6 +419,23 @@ public class RefreshLayout extends ViewGroup {
         if (this.mContentViewObserver != null) {
             this.mContentViewObserver.setAutoLoadMoreResidualNum(loadMoreWhenResidualItemNum, mAutoLoadFootView, mLoadListener);
         }
+    }
+
+    public void setEnableRefresh(boolean enableRefresh) {
+        this.enableRefresh = enableRefresh;
+    }
+
+    public void setEnableLoadMore(boolean enableLoadMore) {
+        this.enableLoadMore = enableLoadMore;
+    }
+
+    public void setmLoadMoreWhenResidualItemNum(int mLoadMoreWhenResidualItemNum) {
+        this.mLoadMoreWhenResidualItemNum = mLoadMoreWhenResidualItemNum;
+    }
+
+    @NonNull
+    public View getContentView() {
+        return mContentView;
     }
 
     @Nullable

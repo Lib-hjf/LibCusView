@@ -1,21 +1,20 @@
 package org.hjf.view.recyclerview;
 
 import android.support.annotation.IdRes;
-import android.support.v7.widget.RecyclerView;
 import android.util.SparseArray;
 import android.view.View;
 import android.widget.TextView;
 
 import org.hjf.log.LogUtil;
 
-public class ViewHolder extends RecyclerView.ViewHolder {
+public class ViewCacheHolder extends BaseViewHolder {
 
     private int itemPosition;
     private SparseArray<View> mViewCache;
     protected View.OnClickListener onClickListener;
     protected View.OnLongClickListener onLongClickListener;
 
-    ViewHolder(View itemView) {
+    public ViewCacheHolder(View itemView) {
         super(itemView);
         mViewCache = new SparseArray<>();
     }
@@ -24,7 +23,7 @@ public class ViewHolder extends RecyclerView.ViewHolder {
      * In order to realize the method {@link AbsRecyclerAdapter#setOnViewClickListener(OnViewClickListener, int...)} and
      * method {@link AbsRecyclerAdapter#setOnViewLongClickListener(OnViewLongClickListener, int...)}
      * <p>
-     * suggest ues the method on {@link AbsRecyclerAdapter#onBindViewHolder(ViewHolder, int)}
+     * suggest ues the method on {@link AbsRecyclerAdapter#onBindViewHolder(ViewCacheHolder, int)}
      *
      * @param itemPosition item position
      */
@@ -58,7 +57,7 @@ public class ViewHolder extends RecyclerView.ViewHolder {
                 @Override
                 public void onClick(View v) {
                     if (onItemClickListener != null) {
-                        onItemClickListener.onViewClickListener(v, ViewHolder.this.getItemPosition());
+                        onItemClickListener.onViewClickListener(v, ViewCacheHolder.this.getItemPosition());
                     }
                 }
             };
@@ -79,7 +78,7 @@ public class ViewHolder extends RecyclerView.ViewHolder {
                 @Override
                 public boolean onLongClick(View v) {
                     if (onItemLongClickListener != null) {
-                        return onItemLongClickListener.onViewLongClickListener(v, ViewHolder.this.getItemPosition());
+                        return onItemLongClickListener.onViewLongClickListener(v, ViewCacheHolder.this.getItemPosition());
                     }
                     return false;
                 }

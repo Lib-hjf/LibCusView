@@ -2,27 +2,22 @@ package org.hjf.view.recyclerview;
 
 import android.content.Context;
 import android.support.annotation.IdRes;
-import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 给 RecyclerView 的通用显示
+ * For multi layout. Read method note:
+ * {@link BaseDataAdapter#getItemLayoutRes(int)} and {@link RecyclerView.Adapter#getItemViewType(int)}
+ * <p>
+ * For item view holder warp up. Read method note:
+ * {@link AbsRecyclerAdapter#getViewHolder(View, int)}
  */
-public abstract class AbsRecyclerAdapter<T> extends RecyclerView.Adapter<ViewHolder> {
-
-    private static final int DEFAULT_ITEM_VIEW_TYPE = 1;
-
-
-    protected Context mContextInAdapter;
-    private ArrayList<T> mData;
+public abstract class AbsRecyclerAdapter<M> extends BaseDataAdapter<M, ViewCacheHolder> {
 
     private int[] clickIds;
     private OnViewClickListener onItemClickListener;
@@ -30,8 +25,7 @@ public abstract class AbsRecyclerAdapter<T> extends RecyclerView.Adapter<ViewHol
     private OnViewLongClickListener onItemLongClickListener;
 
     public AbsRecyclerAdapter(Context context) {
-        this.mContextInAdapter = context;
-        this.mData = new ArrayList<>();
+        super(context);
     }
 
     /**
@@ -42,56 +36,44 @@ public abstract class AbsRecyclerAdapter<T> extends RecyclerView.Adapter<ViewHol
      * @return {@link RecyclerView.ViewHolder}
      */
     @Override
-    public final ViewHolder onCreateViewHolder(ViewGroup parent, int itemViewType) {
-        View layoutView = LayoutInflater.from(mContextInAdapter).inflate(getLayoutRes(itemViewType), parent, false);
-        final ViewHolder viewHolder = getViewHolder(layoutView, itemViewType);
+    public final ViewCacheHolder onCreateViewHolder(ViewGroup parent, int itemViewType) {
+        View layoutView = LayoutInflater.from(mContextInAdapter).inflate(getItemLayoutRes(itemViewType), parent, false);
+        final ViewCacheHolder viewCacheHolder = getViewHolder(layoutView, itemViewType);
         // click
         if (this.onItemClickListener != null && clickIds != null) {
-            viewHolder.setOnViewClickListener(onItemClickListener, clickIds);
+            viewCacheHolder.setOnViewClickListener(onItemClickListener, clickIds);
         }
         // long click
         if (onItemLongClickListener != null && longClickIds != null) {
-            viewHolder.setOnViewLongClickListener(onItemLongClickListener, longClickIds);
+            viewCacheHolder.setOnViewLongClickListener(onItemLongClickListener, longClickIds);
         }
-        return viewHolder;
+        return viewCacheHolder;
+    }
+
+    /**
+     * warp up view holder
+     *
+     * @param layoutView   item layout resource from protected method {@link BaseDataAdapter#getItemLayoutRes(int)}
+     * @param itemViewType item type form protected method {@link BaseDataAdapter#getItemViewType(int)}
+     * @return YourViewHolder extends {@link BaseViewHolder}
+     */
+    protected ViewCacheHolder getViewHolder(View layoutView, int itemViewType) {
+        return new ViewCacheHolder(layoutView);
     }
 
     @Override
-    public final void onBindViewHolder(ViewHolder holder, int position) {
+    public final void onBindViewHolder(ViewCacheHolder holder, int position, List<Object> payloads) {
+        this.onBindViewHolder(holder, position);
+    }
+
+    @Override
+    public final void onBindViewHolder(ViewCacheHolder holder, int position) {
 
         // for onViewClickListener and onViewLongClickListener
         holder.setItemPosition(position);
 
         // bind data on view
-        onBindViewHolder(holder, this.mData.get(position), position);
-    }
-
-    @Override
-    public final void onBindViewHolder(ViewHolder holder, int position, List<Object> payloads) {
-        super.onBindViewHolder(holder, position, payloads);
-    }
-
-    /**
-     * use multi view holder, need override the method for update item view holder
-     *
-     * @param position item position
-     * @return item view type
-     */
-    @Override
-    public int getItemViewType(int position) {
-        return DEFAULT_ITEM_VIEW_TYPE;
-    }
-
-    @LayoutRes
-    protected abstract int getLayoutRes(int itemViewType);
-
-    protected ViewHolder getViewHolder(View layoutView, int itemViewType) {
-        return new ViewHolder(layoutView);
-    }
-
-    @Override
-    public int getItemCount() {
-        return this.mData == null ? 0 : this.mData.size();
+        onBindViewHolder(holder, getData(position), position);
     }
 
     /**
@@ -100,64 +82,11 @@ public abstract class AbsRecyclerAdapter<T> extends RecyclerView.Adapter<ViewHol
      * Clicking events should not be set in this method internally.
      * only do bind data into view.
      */
-    protected abstract void onBindViewHolder(ViewHolder holder, T data, int position);
+    protected abstract void onBindViewHolder(ViewCacheHolder holder, M data, int position);
 
-
-    public void clearData() {
-        this.mData.clear();
-    }
-
-    public void setDataList(@NonNull List<T> list) {
-        this.clearData();
-        this.mData.addAll(list);
-        this.notifyDataSetChanged();
-    }
-
-    public void addData(@NonNull T data) {
-        this.addData(this.mData.size(), data);
-    }
-
-    public void addData(int position, @NonNull T data) {
-        this.mData.add(position, data);
-        this.notifyItemInserted(position);
-        this.notifyItemRangeChanged(position, this.mData.size() - position);
-    }
-
-    public void addDataList(int position, @NonNull List<T> list) {
-        this.mData.addAll(position, list);
-        this.notifyItemRangeInserted(position, list.size());
-        this.notifyItemRangeChanged(position + list.size(), this.mData.size() - position);
-    }
-
-    public void addDataList(@NonNull List<T> list) {
-        this.mData.addAll(list);
-        this.notifyItemRangeInserted(this.mData.size() - list.size(), list.size());
-    }
-
-    @Nullable
-    public T getData(int position) {
-        if (position >= mData.size()) {
-            return null;
-        }
-        return this.mData.get(position);
-    }
-
-    public void removeData(int position) {
-        if (position < 0 || position >= mData.size()) {
-            return;
-        }
-        this.mData.remove(position);
-        this.notifyItemRemoved(position);
-        this.notifyItemRangeChanged(position, this.mData.size() - position);
-    }
-
-    public void removeData(T data) {
-        int position = this.mData.indexOf(data);
-        this.removeData(position);
-    }
 
     /**
-     * Set OnClick for {@link ViewHolder#itemView} contain child views.
+     * Set OnClick for {@link ViewCacheHolder#itemView} contain child views.
      * Before The method {@link RecyclerView.Adapter#onCreateViewHolder(ViewGroup, int)} be called.
      * Before The method {@link AbsRecyclerAdapter#setDataList(List)} be used.
      *
@@ -170,7 +99,7 @@ public abstract class AbsRecyclerAdapter<T> extends RecyclerView.Adapter<ViewHol
     }
 
     /**
-     * Set OnLongClick for {@link ViewHolder#itemView} contain child views.
+     * Set OnLongClick for {@link ViewCacheHolder#itemView} contain child views.
      * Before The method {@link RecyclerView.Adapter#onCreateViewHolder(ViewGroup, int)} be called.
      * Before The method {@link AbsRecyclerAdapter#setDataList(List)} be used.
      *

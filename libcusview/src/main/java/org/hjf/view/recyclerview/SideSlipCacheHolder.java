@@ -6,11 +6,11 @@ import android.view.View;
  * 侧滑Item
  * 使 {@link android.support.v7.widget.RecyclerView} 的Item具备侧滑功能
  */
-public final class SideSlipHolder extends ViewHolder {
+public final class SideSlipCacheHolder extends ViewCacheHolder {
 
     private SideSlipLayout itemView;
 
-    public SideSlipHolder(SideSlipLayout itemView) {
+    public SideSlipCacheHolder(SideSlipLayout itemView) {
         super(itemView);
         this.itemView = itemView;
     }
@@ -38,11 +38,11 @@ public final class SideSlipHolder extends ViewHolder {
 
                 @Override
                 public void onClick(View v) {
-                    if (v.getParent() == SideSlipHolder.this.getMenuView()) {
+                    if (v.getParent() == SideSlipCacheHolder.this.getMenuView()) {
                         close();
                     }
                     if (onItemClickListener != null) {
-                        onItemClickListener.onViewClickListener(v, SideSlipHolder.this.getItemPosition());
+                        onItemClickListener.onViewClickListener(v, SideSlipCacheHolder.this.getItemPosition());
                     }
                 }
             };
